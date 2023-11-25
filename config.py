@@ -1,8 +1,7 @@
 ADMIN_ROLES = [
-    1120415511491133514, # Admin (Declan McKenna)
-    1171444543070158888, # Temp Admin (Declan McKenna)
+    1156595395372273695, # Developer
 ]
 
 guild_ids = [
-   1120415511411441694, # Declan McKenna
+   1156594325866680320, # CUFE CMP 27
 ]

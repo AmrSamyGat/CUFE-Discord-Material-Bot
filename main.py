@@ -5,9 +5,9 @@ from discord import app_commands
 import logging
 import os
 
-from Database import Database
+#from Database import Database
 import commands.set_channel as set_channel
-import commands.unset_channel as unset_channel
+#import commands.unset_channel as unset_channel
 
 
 from config import guild_ids
@@ -26,8 +26,7 @@ class CUFEBot(commands.Bot):
         super().__init__(intents=intents, command_prefix='!')  # Prefix
 
         self.synced = False
-        self.database = Database()
-
+        #self.database = Database()
 
     
     async def on_ready(self):
@@ -41,9 +40,14 @@ class CUFEBot(commands.Bot):
             self.synced = True
             print("Commands synced")
 
+    async def on_message(self, message):
+        if message.author.bot:
+            return
+        
+
     async def sync_commands(self):
         await set_channel.sync_command(self, guild_ids)
-        await unset_channel.sync_command(self, guild_ids)
+        #await unset_channel.sync_command(self, guild_ids)
 
 
 # Run
