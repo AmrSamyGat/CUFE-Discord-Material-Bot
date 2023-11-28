@@ -5,10 +5,10 @@ from discord import app_commands
 import logging
 import os
 
-#from Database import Database
+from Database import Database
 import commands.hi as hi
-from dotenv import load_dotenv
-#import commands.unset_channel as unset_channel
+import commands.set_channel as set_channel
+import commands.unset_channel as unset_channel
 
 
 from config import guild_ids
@@ -49,7 +49,8 @@ class CUFEBot(commands.Bot):
 
     async def sync_commands(self):
         await hi.sync_command(self, guild_ids)
-        #await unset_channel.sync_command(self, guild_ids)
+        await set_channel.sync_command(self, guild_ids)
+        await unset_channel.sync_command(self, guild_ids)
 
 
 # Run
