@@ -3,7 +3,6 @@ from discord.ext import commands
 from discord import app_commands
 
 from Database import Database
-from Map import Map
 
 from config import *
 
@@ -18,8 +17,7 @@ async def sync_command(bot:commands.Bot, guild_ids:[]):
         if not is_unset:
             await interaction.followup.send("`This channel isn't registered.`")
             return
-        bot.refresh_maps()
 
-        e = discord.Embed(color=discord.Color.blue(), title="BeachCombing", description=f"**You cannot use the bot in <#{channel.id}> now ✅**", timestamp = discord.utils.utcnow())
-        e.set_footer(text="BeachCombing Bot")
+        e = discord.Embed(color=discord.Color.blue(), title="CMP 27", description=f"**You cannot use the bot in <#{channel.id}> now ✅**", timestamp = discord.utils.utcnow())
+        e.set_footer(text="CUFE CMP 27")
         await interaction.followup.send(embed=e)
