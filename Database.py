@@ -4,7 +4,35 @@ import os
 from datetime import datetime
 import time
 load_dotenv()
-
+"""
+Database structure:
+- users
+    - _id: int
+    - join_time: datetime
+- guilds
+    - _id: int
+    - semesters: list of semester ids
+- channels
+    - _id: int
+- semesters
+    - _id: semester_year
+    - semester: int
+    - year: int
+    - weeks: list of weeks
+        - id: int
+    - courses: list of courses
+        - course_id
+        - course_name
+        - materials: list of materials
+            - id: int
+            - week: int
+            - title: str
+            - links: list of links
+                - link: str
+                - title: str
+            - description: str
+            - date: datetime
+"""
 DATABASE_SERVER = os.getenv("MONGO_DB_SERVER")
 DATABASE_NAME = os.getenv("MONGO_DB_NAME")
 
@@ -61,10 +89,59 @@ class Database:
         return True
 
     # Material
-    def register_semester(self, semester: int, year: int):
-        self.semesters.insert_one({"_id": str(semester)+"_"+(year), "semester":semester, "year": year, "courses":{}})
-
     def get_semester_id(self, semester: int, year: int):
-        pass
+        return str(semester)+"_"+str(year)
+    def register_semester(self, semester: int, year: int):
+        self.semesters.insert_one({"_id": self.get_semester_id(semester, year), "semester":semester, "year": year, "weeks":[], "courses":{}})
+
+    def get_semester(self, semester: int, year: int):
+        return self.semesters.find_one({"_id": self.get_semester_id(semester, year)})
+    
+    def get_semesters(self):
+        return list(self.semesters.find({}))
+    
+    def add_week(self, semester: int, year: int, week: int):
+        semester = self.get_semester(semester, year)
+        semester["weeks"].append(week)
+        self.semesters.update_one({"_id": self.get_semester_id(semester, year)}, {"$set": semester})
+    def get_semester_weeks(self, semester: int, year: int):
+        return self.get_semester(semester, year)["weeks"]
+    
+    def register_course(self, semester: int, year: int, course_id: str, course_name: str):
+        semester = self.get_semester(semester, year)
+        semester["courses"][course_id] = {"name": course_name, "materials": []}
+        self.semesters.update_one({"_id": self.get_semester_id(semester, year)}, {"$set": semester})
+    
+    def get_semester_courses(self, semester: int, year: int):
+        return self.get_semester(semester, year)["courses"]
+    
+    def get_semester_course(self, semester: int, year: int, course_id: str):
+        return self.get_semester_courses(semester, year)[course_id]
+    
+    def get_semester_course_materials(self, semester: int, year: int, course_id: str):
+        return self.get_semester_course(semester, year, course_id)["materials"]
+
+    def push_material(self, semester: int, year: int, course_id: str, title: str, description: str, week: int, links: list=[], date: datetime=datetime.now()):
+        materials = self.get_semester_course_materials(semester, year, course_id)
+
+        material = {
+            "id": len(materials), 
+            "title": title, 
+            "description": description, 
+            "week": week, 
+            "links": links, 
+            "date": date
+        }
+        
+        materials.append(material)
+
+        self.semesters.update_one({"_id": self.get_semester_id(semester, year)}, {"$set": {"courses."+course_id+".materials": materials}})
+
+    def get_semester_course_material(self, semester: int, year: int, course_id: str, material_id: int):
+        materials = self.get_semester_course_materials(semester, year, course_id)
+        for material in materials:
+            if material["id"] == material_id:
+                return material
+    
     
 
