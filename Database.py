@@ -11,11 +11,11 @@ Database structure:
     - join_time: datetime
 - guilds
     - _id: int
-    - semesters: list of semester ids
 - channels
     - _id: int
 - semesters
     - _id: semester_year
+    - guild_id: int
     - semester: int
     - year: int
     - weeks: list of weeks
@@ -91,8 +91,8 @@ class Database:
     # Material
     def get_semester_id(self, semester: int, year: int):
         return str(semester)+"_"+str(year)
-    def register_semester(self, semester: int, year: int):
-        self.semesters.insert_one({"_id": self.get_semester_id(semester, year), "semester":semester, "year": year, "weeks":[], "courses":{}})
+    def register_semester(self, guild_id: int, semester: int, year: int):
+        self.semesters.insert_one({"_id": self.get_semester_id(semester, year), "guild_id":guild_id, "semester":semester, "year": year, "weeks":[], "courses":{}})
 
     def get_semester(self, semester: int, year: int):
         return self.semesters.find_one({"_id": self.get_semester_id(semester, year)})
@@ -132,7 +132,7 @@ class Database:
             "links": links, 
             "date": date
         }
-        
+
         materials.append(material)
 
         self.semesters.update_one({"_id": self.get_semester_id(semester, year)}, {"$set": {"courses."+course_id+".materials": materials}})
