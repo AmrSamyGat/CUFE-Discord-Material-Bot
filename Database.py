@@ -89,40 +89,46 @@ class Database:
         return True
 
     # Material
-    def get_semester_id(self, semester: int, year: int):
-        return str(semester)+"_"+str(year)
+    def get_semester_id(self, guild_id: int, semester: int, year: int):
+        return str(semester)+"_"+str(year)+"_"+str(guild_id)
+    def get_semester(self, guild_id: int, semester: int, year: int):
+        return self.semesters.find_one({"_id": self.get_semester_id(guild_id, semester, year), "guild_id":guild_id})
+    def get_semeseter_from_id(self, semester_id: str):
+        return self.semesters.find_one({"_id": semester_id})
     def register_semester(self, guild_id: int, semester: int, year: int):
-        self.semesters.insert_one({"_id": self.get_semester_id(semester, year), "guild_id":guild_id, "semester":semester, "year": year, "weeks":[], "courses":{}})
+        if self.get_semester(semester, year) is None:
+            self.semesters.insert_one({"_id": self.get_semester_id(guild_id, semester, year), "guild_id":guild_id, "semester":semester, "year": year, "weeks":[], "courses":{}})
+            return True
+        return False
 
-    def get_semester(self, semester: int, year: int):
-        return self.semesters.find_one({"_id": self.get_semester_id(semester, year)})
     
-    def get_semesters(self):
-        return list(self.semesters.find({}))
+    def get_semesters(self, guild_id: int):
+        return list(self.semesters.find({"guild_id":guild_id}))
     
-    def add_week(self, semester: int, year: int, week: int):
-        semester = self.get_semester(semester, year)
+    def add_week(self, semester_id: str, week: int):
+        semester = self.get_semeseter_from_id(semester_id)
         semester["weeks"].append(week)
-        self.semesters.update_one({"_id": self.get_semester_id(semester, year)}, {"$set": semester})
-    def get_semester_weeks(self, semester: int, year: int):
-        return self.get_semester(semester, year)["weeks"]
+        self.semesters.update_one({"_id": semester_id}, {"$set": semester})
     
-    def register_course(self, semester: int, year: int, course_id: str, course_name: str):
-        semester = self.get_semester(semester, year)
+    def get_semester_weeks(self, semester_id: str):
+        return self.get_semeseter_from_id(semester_id)["weeks"]
+    
+    def register_course(self, semester_id: str, course_id: str, course_name: str):
+        semester = self.get_semeseter_from_id(semester_id)
         semester["courses"][course_id] = {"name": course_name, "materials": []}
-        self.semesters.update_one({"_id": self.get_semester_id(semester, year)}, {"$set": semester})
+        self.semesters.update_one({"_id": semester_id}, {"$set": semester})
     
-    def get_semester_courses(self, semester: int, year: int):
-        return self.get_semester(semester, year)["courses"]
+    def get_semester_courses(self, semester_id: str):
+        return self.get_semeseter_from_id(semester_id)["courses"]
     
-    def get_semester_course(self, semester: int, year: int, course_id: str):
-        return self.get_semester_courses(semester, year)[course_id]
+    def get_semester_course(self, semester_id: str, course_id: str):
+        return self.get_semester_courses(semester_id)[course_id]
     
-    def get_semester_course_materials(self, semester: int, year: int, course_id: str):
-        return self.get_semester_course(semester, year, course_id)["materials"]
+    def get_semester_course_materials(self, semester_id: str, course_id: str):
+        return self.get_semester_course(semester_id, course_id)["materials"]
 
-    def push_material(self, semester: int, year: int, course_id: str, title: str, description: str, week: int, links: list=[], date: datetime=datetime.now()):
-        materials = self.get_semester_course_materials(semester, year, course_id)
+    def push_material(self, semester_id: str, course_id: str, title: str, description: str, week: int, links: list=[], date: datetime=datetime.now()):
+        materials = self.get_semester_course_materials(semester_id, course_id)
 
         material = {
             "id": len(materials), 
@@ -135,10 +141,10 @@ class Database:
 
         materials.append(material)
 
-        self.semesters.update_one({"_id": self.get_semester_id(semester, year)}, {"$set": {"courses."+course_id+".materials": materials}})
+        self.semesters.update_one({"_id": semester_id}, {"$set": {"courses."+course_id+".materials": materials}})
 
-    def get_semester_course_material(self, semester: int, year: int, course_id: str, material_id: int):
-        materials = self.get_semester_course_materials(semester, year, course_id)
+    def get_semester_course_material(self, semester_id: str, course_id: str, material_id: int):
+        materials = self.get_semester_course_materials(semester_id, course_id)
         for material in materials:
             if material["id"] == material_id:
                 return material

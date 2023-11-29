@@ -15,7 +15,6 @@ from config import guild_ids
 
 
 # Configurations
-load_dotenv()
 TOKEN = os.getenv("TOKEN")
 intents = discord.Intents.all()
 
@@ -28,7 +27,7 @@ class CUFEBot(commands.Bot):
         super().__init__(intents=intents, command_prefix='!')  # Prefix
 
         self.synced = False
-        #self.database = Database()
+        self.database = Database()
 
     
     async def on_ready(self):
