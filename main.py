@@ -29,8 +29,8 @@ discord.utils.setup_logging()
 
 # Bot
 class CUFEBot(commands.Bot):
-    def __init__(self):
-        super().__init__(intents=intents, command_prefix='!')  # Prefix
+    def __init__(self, activity=discord.Activity(type=discord.ActivityType.listening, name="Your Suffering"), status=discord.Status.dnd):
+        super().__init__(intents=intents, command_prefix='!', activity=activity, status=status)  # Prefix
 
         self.synced = False
         self.database = Database()
