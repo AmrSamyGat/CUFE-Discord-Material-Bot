@@ -91,35 +91,64 @@ class Database:
     # Material
     def get_semester_id(self, guild_id: int, semester: int, year: int):
         return str(semester)+"_"+str(year)+"_"+str(guild_id)
+    def convert_semester_id(self, semester_id: str): # returns semester, year, guild_id
+        return semester_id.split("_")
+
     def get_semester(self, guild_id: int, semester: int, year: int):
         return self.semesters.find_one({"_id": self.get_semester_id(guild_id, semester, year), "guild_id":guild_id})
-    def get_semeseter_from_id(self, semester_id: str):
+    def get_semester_from_id(self, semester_id: str):
         return self.semesters.find_one({"_id": semester_id})
     def register_semester(self, guild_id: int, semester: int, year: int):
-        if self.get_semester(semester, year) is None:
+        if self.get_semester(guild_id, semester, year) is None:
             self.semesters.insert_one({"_id": self.get_semester_id(guild_id, semester, year), "guild_id":guild_id, "semester":semester, "year": year, "weeks":[], "courses":{}})
             return True
         return False
 
+    def get_all_semesters(self): # returns all semester IDS
+        return [s["_id"] for s in list(self.semesters.find({}))]
     
     def get_semesters(self, guild_id: int):
         return list(self.semesters.find({"guild_id":guild_id}))
     
     def add_week(self, semester_id: str, week: int):
-        semester = self.get_semeseter_from_id(semester_id)
+        semester = self.get_semester_from_id(semester_id)
         semester["weeks"].append(week)
         self.semesters.update_one({"_id": semester_id}, {"$set": semester})
     
+    def get_weeks(self, guild_id: int, with_semester: bool=False):
+        semesters = self.get_semesters(guild_id)
+        weeks = []
+        for semester in semesters:
+            if with_semester:
+                for week in semester["weeks"]:
+                    s = self.convert_semester_id(semester["_id"])
+                    weeks.append((week, s[0], s[1]))
+            else:
+                weeks += semester["weeks"]
+        return weeks
+
     def get_semester_weeks(self, semester_id: str):
-        return self.get_semeseter_from_id(semester_id)["weeks"]
+        return self.get_semester_from_id(semester_id)["weeks"]
     
-    def register_course(self, semester_id: str, course_id: str, course_name: str):
-        semester = self.get_semeseter_from_id(semester_id)
-        semester["courses"][course_id] = {"name": course_name, "materials": []}
+    def register_course(self, semester_id: str, course_id: str):
+        semester = self.get_semester_from_id(semester_id)
+        semester["courses"][course_id] = {"name": course_id, "materials": []}
         self.semesters.update_one({"_id": semester_id}, {"$set": semester})
     
+    def get_courses(self, guild_id: int, with_semester: bool=False):
+        semesters = self.get_semesters(guild_id)
+        courses = []
+        for semester in semesters:
+            if with_semester:
+                for course in semester["courses"]:
+                    s = self.convert_semester_id(semester["_id"])
+                    courses.append((course, s[0], s[1]))
+            else:
+                courses += list(semester["courses"].keys())
+        return courses
+        
     def get_semester_courses(self, semester_id: str):
-        return self.get_semeseter_from_id(semester_id)["courses"]
+        return self.get_semester_from_id(semester_id)["courses"]
     
     def get_semester_course(self, semester_id: str, course_id: str):
         return self.get_semester_courses(semester_id)[course_id]

@@ -11,6 +11,6 @@ async def sync_command(bot:commands.Bot, guild_ids:[]):
     async def hi(interaction: discord.Interaction, text:str = "Hi"):
         if interaction.channel.id not in bot.database.get_channels():
             return
-        await interaction.response.defer(ephemeral=True, thinking=True)
+        await interaction.response.defer(ephemeral=False, thinking=True)
         db: Database = bot.database
         await interaction.followup.send(content=text)

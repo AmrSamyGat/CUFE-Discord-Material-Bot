@@ -6,9 +6,15 @@ import logging
 import os
 
 from Database import Database
+
 import commands.hi as hi
 import commands.set_channel as set_channel
 import commands.unset_channel as unset_channel
+import commands.register_semester as register_semester
+import commands.register_course as register_course
+import commands.push_material as push_material
+import commands.add_week as add_week
+
 
 
 from config import guild_ids
@@ -28,6 +34,7 @@ class CUFEBot(commands.Bot):
 
         self.synced = False
         self.database = Database()
+        self.semesters = list(self.database.get_all_semesters())
 
     
     async def on_ready(self):
@@ -50,7 +57,13 @@ class CUFEBot(commands.Bot):
         await hi.sync_command(self, guild_ids)
         await set_channel.sync_command(self, guild_ids)
         await unset_channel.sync_command(self, guild_ids)
+        await register_semester.sync_command(self, guild_ids)
+        await register_course.sync_command(self, guild_ids)
+        await push_material.sync_command(self, guild_ids)
+        await add_week.sync_command(self, guild_ids)
 
+    def refresh(self):
+        self.semesters = list(self.database.get_all_semesters())
 
 # Run
 bot = CUFEBot()
