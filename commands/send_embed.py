@@ -20,7 +20,12 @@ async def sync_command(bot:commands.Bot, guild_ids:[]):
         embed.set_thumbnail(url=interaction.guild.icon.url)
 
         weeksView = MaterialWeeksView(bot, semester)
+
+        self.bot.add_view(weeksView)
+
         await channel.send(embed=embed, view=weeksView)
+
+        await interaction.followup.send(f"`The embed is sent successfully in <#{channel.id}>.`")
 
     @send_embed.autocomplete('semester')
     async def autocomplete(
