@@ -112,8 +112,11 @@ class Database:
     
     def add_week(self, semester_id: str, week: int):
         semester = self.get_semester_from_id(semester_id)
+        if week in semester["weeks"]:
+            return False
         semester["weeks"].append(week)
         self.semesters.update_one({"_id": semester_id}, {"$set": semester})
+        return True
     
     def get_weeks(self, guild_id: int, with_semester: bool=False):
         semesters = self.get_semesters(guild_id)
@@ -155,6 +158,10 @@ class Database:
     
     def get_semester_course_materials(self, semester_id: str, course_id: str):
         return self.get_semester_course(semester_id, course_id)["materials"]
+    
+    def get_semester_course_materials_byweek(self, semester_id: str, course_id: str, week: int):
+        materials = self.get_semester_course_materials(semester_id, course_id)
+        return [material for material in materials if material["week"] == week]
 
     def push_material(self, semester_id: str, course_id: str, title: str, description: str, week: int, links: list=[], date: datetime=datetime.now()):
         materials = self.get_semester_course_materials(semester_id, course_id)

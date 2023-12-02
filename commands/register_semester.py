@@ -20,6 +20,6 @@ async def sync_command(bot:commands.Bot, guild_ids:[]):
             await interaction.followup.send("`This semester is already registered.`")
             return
         
-        bot.refresh() # refreshes semesters list
+        await bot.refresh() # refreshes semesters list
 
         await interaction.followup.send("`This semester is registered successfully.`")

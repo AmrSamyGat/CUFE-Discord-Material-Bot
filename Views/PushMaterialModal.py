@@ -14,7 +14,7 @@ class PushMaterialModal(ui.Modal):
     mtitle = ui.TextInput(label='Material Title', placeholder='Enter the title of your material', style=discord.TextStyle.short)
     mlink = ui.TextInput(label='Material Link', placeholder='Link', style=discord.TextStyle.short)
     mlink_title = ui.TextInput(label='Link Title', placeholder='Link Title', style=discord.TextStyle.short)
-    mdesc = ui.TextInput(label='Description', placeholder='Description of your material\nTo add more links add link_title:url\nEx. link_Lecture 2: link.com', style=discord.TextStyle.paragraph)
+    mdesc = ui.TextInput(label='Description', placeholder='Description of your material\nTo add more links use [title](url)\nEx: [Lecture 2](http://link.com)', style=discord.TextStyle.paragraph)
 
     async def on_submit(self, interaction: discord.Interaction):
         db: Database = self.bot.database

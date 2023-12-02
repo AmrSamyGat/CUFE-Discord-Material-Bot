@@ -7,7 +7,7 @@ from Database import Database
 from config import *
 
 async def sync_command(bot:commands.Bot, guild_ids:[]):
-    @bot.tree.command(name ="register_course", description="Pushes new semester material into the bot.", guilds=[discord.Object(id=gid) for gid in guild_ids]) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
+    @bot.tree.command(name ="register_course", description="Registers a new course into the bot.", guilds=[discord.Object(id=gid) for gid in guild_ids]) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
     @discord.app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def register_course(interaction: discord.Interaction, semester: str, course: str):
         if interaction.channel.id not in bot.database.get_channels():
