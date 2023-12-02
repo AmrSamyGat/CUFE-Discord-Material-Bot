@@ -4,3 +4,4 @@
 *.pyc
 *.pyc
 .env
+*.pyc

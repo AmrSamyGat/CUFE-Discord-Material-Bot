@@ -184,6 +184,13 @@ class Database:
         for material in materials:
             if material["id"] == material_id:
                 return material
-    
+    def delete_material(self, semester_id: str, course_id: str, material_id: int):
+        materials = self.get_semester_course_materials(semester_id, course_id)
+        for material in materials:
+            if material["id"] == material_id:
+                materials.remove(material)
+                self.semesters.update_one({"_id": semester_id}, {"$set": {"courses."+course_id+".materials": materials}})
+                return True
+        return False
     
 

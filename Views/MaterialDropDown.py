@@ -37,7 +37,7 @@ class MaterialCoursesDropDown(ui.Select):
         self.bot = bot
         self.db: Database = bot.database
         self.week = week
-        self.courses = sorted(self.db.get_semester_courses(self.semester))
+        self.courses = self.db.get_semester_courses(self.semester)
         for course in self.courses:
             self.add_option(label=f"{course}", value=course)
     
@@ -85,6 +85,9 @@ class MaterialsDropDown(ui.Select):
         selected_material = int(self.values[0])
         await interaction.response.defer(ephemeral=True, thinking=True) 
         material = self.db.get_semester_course_material(self.semester, self.course, selected_material)
+        if material is None:
+            await interaction.followup.send("`Material not found.`", ephemeral=True)
+            return
         embed = discord.Embed(title=material['title'], description=f"Material for {self.course} - Week {self.week}", color=discord.Color.blurple())
         embed.set_footer(text="CUFE CMP 27")
         embed.set_thumbnail(url=interaction.guild.icon.url)
@@ -94,7 +97,8 @@ class MaterialsDropDown(ui.Select):
                 link = f"https://{link}"
             embed.add_field(name="Main Link", value=f"[{material['links'][0]['title']}]({link})", inline=False)
 
-        embed.add_field(name="Description (And other links)", value=material['description'], inline=False)
+        if 'description' in material and len(material['description']) > 0:
+            embed.add_field(name="Description (And other links)", value=material['description'], inline=False)
 
         await interaction.followup.send(embed=embed, view=SaveMaterialView(self.bot, embed, self.week, self.course, material['title']))
 

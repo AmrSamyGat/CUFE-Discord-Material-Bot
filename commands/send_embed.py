@@ -21,7 +21,7 @@ async def sync_command(bot:commands.Bot, guild_ids:[]):
 
         weeksView = MaterialWeeksView(bot, semester)
 
-        self.bot.add_view(weeksView)
+        bot.add_view(weeksView)
 
         await channel.send(embed=embed, view=weeksView)
 

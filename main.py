@@ -14,6 +14,7 @@ import commands.register_course as register_course
 import commands.push_material as push_material
 import commands.add_week as add_week
 import commands.send_embed as send_embed
+import commands.delete_material as delete_material
 
 from Views.MaterialDropDown import *
 
@@ -35,6 +36,7 @@ class CUFEBot(commands.Bot):
         self.synced = False
         self.database = Database()
         self.semesters = list(self.database.get_all_semesters())
+        self.logs_channels = {}
 
     
     async def on_ready(self):
@@ -55,12 +57,15 @@ class CUFEBot(commands.Bot):
                 self.add_view(MaterialCoursesView(self, semester, week))
             print(f"Added views for semester {semester}")
 
-        self.logs_channel = self.get_channel(LOGS_CHANNEL)
-        if self.logs_channel is None:
-            try:
-                self.logs_channel = await self.fetch_channel(LOGS_CHANNEL)
-            except:
-                print("Logs channel not found")
+        for gid, LOGS_CHANNEL in LOGS_CHANNELS.items():
+            _channel = self.get_channel(LOGS_CHANNEL)
+            if _channel is None:
+                try:
+                    _channel = await self.fetch_channel(LOGS_CHANNEL)
+                except:
+                    print("Logs channel not found")
+                    continue
+            self.logs_channels[gid] = _channel
 
     async def on_message(self, message):
         if message.author.bot:
@@ -75,6 +80,7 @@ class CUFEBot(commands.Bot):
         await push_material.sync_command(self, guild_ids)
         await add_week.sync_command(self, guild_ids)
         await send_embed.sync_command(self, guild_ids)
+        await delete_material.sync_command(self, guild_ids)
 
     async def refresh(self):
         self.semesters = list(self.database.get_all_semesters())
@@ -99,13 +105,16 @@ class CUFEBot(commands.Bot):
                                 print(f"Updated Week View for #{channel.name} in {channel.guild.name}")
 
     async def send_logs(self, interaction: discord.Interaction, material_name: str, week: int, course: str, action = "requested"):
-        if self.logs_channel is None:
+        logs_channel = self.logs_channels[interaction.guild.id]
+
+        if logs_channel is None:
             return
         user = interaction.user
         channel = interaction.channel
+
         embed = discord.Embed(title=f"Material Logs", description=f"**Material:** {material_name}\n**Week:** {week}\n**Course:** {course}\n**{action.title()} by:** {user.mention}\n**In:** {channel.mention}", color=discord.Color.blurple())
         embed.set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url)
-        await self.logs_channel.send(embed=embed)
+        await logs_channel.send(embed=embed)
 
 # Run
 bot = CUFEBot()
