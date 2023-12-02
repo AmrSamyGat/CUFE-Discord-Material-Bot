@@ -166,8 +166,11 @@ class Database:
     def push_material(self, semester_id: str, course_id: str, title: str, description: str, week: int, links: list=[], date: datetime=datetime.now()):
         materials = self.get_semester_course_materials(semester_id, course_id)
 
+        material_id = 0
+        if len(materials) > 0:
+            material_id = materials[-1]["id"] + 1
         material = {
-            "id": len(materials), 
+            "id": material_id, 
             "title": title, 
             "description": description, 
             "week": week, 
