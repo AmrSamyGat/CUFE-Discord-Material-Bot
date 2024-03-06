@@ -20,6 +20,8 @@ from Views.MaterialDropDown import *
 
 from config import *
 
+from plot import plot_function
+
 
 # Configurations
 TOKEN = os.getenv("TOKEN")
@@ -28,9 +30,15 @@ intents = discord.Intents.all()
 logging.basicConfig(level=logging.INFO)
 discord.utils.setup_logging()
 
+# Graph plotting
+PLOTTING_CHANNEL = 1214739737932337212 # CMP
+x_min = -30
+x_max = 30
+num_points = 1000
+
 # Bot
 class CUFEBot(commands.Bot):
-    def __init__(self, activity=discord.Activity(type=discord.ActivityType.watching, name="You Suffering"), status=discord.Status.dnd):
+    def __init__(self, activity=discord.Activity(type=discord.ActivityType.listening, name="you"), status=discord.Status.online):
         super().__init__(intents=intents, command_prefix='!', activity=activity, status=status)  # Prefix
 
         self.synced = False
@@ -70,6 +78,20 @@ class CUFEBot(commands.Bot):
     async def on_message(self, message):
         if message.author.bot:
             return
+        
+        if message.channel.id == PLOTTING_CHANNEL  and message.content.startswith('p'):
+            function_str = message.content[1:]
+            function_str = function_str.strip()
+
+            # Attempt to generate the plot image
+            plot_data = plot_function(function_str, x_min, x_max, num_points)
+
+            if plot_data is not None:
+                # Send the generated image as a file
+                await message.channel.send(f"`Plotting function: f(x) = {function_str}`", file=discord.File(plot_data, filename='plot.png'))
+            else:
+                # Inform the user about the error
+                await message.channel.send("`Error generating plot. Please check the function syntax.`")
         
 
     async def sync_commands(self):
@@ -118,4 +140,28 @@ class CUFEBot(commands.Bot):
 
 # Run
 bot = CUFEBot()
+
+@bot.event
+async def on_voice_state_update(member: discord.Member, before, after):
+    if member.bot:
+        return
+    voice_client = member.guild.voice_client
+    is_in_voice = voice_client is not None and voice_client.channel is not None
+    if voice_client is not None:
+        channel = voice_client.channel
+        if channel and (len(channel.members) <= 1):
+            await voice_client.disconnect(force=True)
+            print(f"Bot has left {channel.name}")
+            is_in_voice = False
+    if after.channel is not None:
+        # Member joined a voice channel
+        channel: discord.VoiceChannel = after.channel
+        if not is_in_voice:
+            voice_client = await channel.connect()
+        else:
+            if voice_client.channel != channel:
+                await voice_client.move_to(channel)
+        print(f"Bot has joined {channel.name}")
+        pass  # You can add logic here if needed
+
 bot.run(TOKEN)
