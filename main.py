@@ -22,6 +22,7 @@ from config import *
 
 from plot import plot_function
 
+import requests
 
 # Configurations
 TOKEN = os.getenv("TOKEN")
@@ -36,6 +37,43 @@ x_min = -30
 x_max = 30
 num_points = 1000
 
+def send_poll():
+    # Channel ID where you want to send the message
+    channel_id = "1157439694058049637"
+
+    # Message payload
+    payload = {
+        "content": "",
+        "tts":False,
+        "flags":0,
+        "poll":{
+            "question":{"text":"test"},
+            "answers":[
+                {"poll_media":{"text":"t1"}},
+                {"poll_media":{"text":"t2"}}
+            ],
+            "allow_multiselect":False,
+            "duration":24,
+            "layout_type":1
+        }
+    }
+
+    # Headers with authorization
+    headers = {
+        "Authorization": f"Bot {TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    # Send POST request to Discord API
+    url = f"https://discord.com/api/v9/channels/{1157439694058049637}/messages"
+    response = requests.post(url, json=payload, headers=headers)
+
+    # Check if the message was sent successfully
+    if response.status_code == 200:
+        print("Message sent successfully.")
+    else:
+        print("Failed to send message. Status code:", response.status_code)
+        print(response.json())
 # Bot
 class CUFEBot(commands.Bot):
     def __init__(self, activity=discord.Activity(type=discord.ActivityType.listening, name="you"), status=discord.Status.online):
@@ -78,7 +116,8 @@ class CUFEBot(commands.Bot):
     async def on_message(self, message):
         if message.author.bot:
             return
-        
+        #if message.content.startswith('poll'):
+        #    send_poll()
         if message.channel.id == PLOTTING_CHANNEL  and message.content.startswith('p'):
             function_str = message.content[1:]
             function_str = function_str.strip()
@@ -141,27 +180,27 @@ class CUFEBot(commands.Bot):
 # Run
 bot = CUFEBot()
 
-@bot.event
-async def on_voice_state_update(member: discord.Member, before, after):
-    if member.bot:
-        return
-    voice_client = member.guild.voice_client
-    is_in_voice = voice_client is not None and voice_client.channel is not None
-    if voice_client is not None:
-        channel = voice_client.channel
-        if channel and (len(channel.members) <= 1):
-            await voice_client.disconnect(force=True)
-            print(f"Bot has left {channel.name}")
-            is_in_voice = False
-    if after.channel is not None:
-        # Member joined a voice channel
-        channel: discord.VoiceChannel = after.channel
-        if not is_in_voice:
-            voice_client = await channel.connect()
-        else:
-            if voice_client.channel != channel:
-                await voice_client.move_to(channel)
-        print(f"Bot has joined {channel.name}")
-        pass  # You can add logic here if needed
+#@bot.event
+#async def on_voice_state_update(member: discord.Member, before, after):
+#    if member.bot:
+#        return
+#    voice_client = member.guild.voice_client
+#    is_in_voice = voice_client is not None and voice_client.channel is not None
+#    if voice_client is not None:
+#        channel = voice_client.channel
+#        if channel and (len(channel.members) <= 1):
+#            await voice_client.disconnect(force=True)
+#            print(f"Bot has left {channel.name}")
+#            is_in_voice = False
+#    if after.channel is not None:
+#        # Member joined a voice channel
+#        channel: discord.VoiceChannel = after.channel
+#        if not is_in_voice:
+#            voice_client = await channel.connect()
+#        else:
+#            if voice_client.channel != channel:
+#                await voice_client.move_to(channel)
+#        print(f"Bot has joined {channel.name}")
+#        pass  # You can add logic here if needed
 
 bot.run(TOKEN)
